@@ -1,9 +1,11 @@
 
-import requests
+import zipfile
+from pathlib import Path
 from urllib.parse import urlparse
 
-from .utils import setup_logger
+import requests
 
+from .utils import setup_logger
 
 # setting logger
 logger = setup_logger('S3_file_download')
@@ -22,7 +24,7 @@ def chekc_valid_url(url: str) -> bool:
     try:
         parsed_url = urlparse(url)
         return parsed_url.scheme in ("http", "https") or parsed_url.netloc
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.info(f"URL {url} is not valid {e}")
         return False
 
@@ -63,3 +65,28 @@ def download_file(url: str, save_path: str) -> bool:
         logger.critical(f"Disk/File Error: Could not save file to disk ({err})")
 
     return False
+
+def file_unzip(file_name, save_path):
+
+    # checking if file is zip or not
+    if not zipfile.is_zipfile(file_name):
+        logger.error(f"File {file_name} is not a zip file.")
+        return False
+
+    # creating zipfile object.
+    zip_file_object = zipfile.ZipFile(file_name, mode='r')
+
+    # getting all file names from the zip file
+    zip_member_list = zip_file_object.namelist()
+
+    # keeping only valid files.
+    zip_member_list = [name 
+                       for name in zip_member_list 
+                       if '__macosx' not in name or not Path(name).name.startswith('.')]
+
+    # starting extraction
+    for member in zip_member_list:
+        zip_file_object.extract(member, path=save_path)
+
+    logger.info(f"File {file_name} Extracted!.")
+    return True
