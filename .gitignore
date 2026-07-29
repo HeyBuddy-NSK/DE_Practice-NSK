@@ -219,3 +219,6 @@ __marimo__/
 
 # zip files
 *.zip
+
+# data files
+*data/
