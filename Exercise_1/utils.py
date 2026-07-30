@@ -4,21 +4,17 @@ from logging import getLogger
 from pathlib import Path
 
 
-def setup_logger(name: str = __name__, log_folder: str = "logs") -> getLogger:
+def setup_logger(name: str = __name__, log_folder: str = "logs") -> logging.Logger:
     """Configure a logger that writes level messages to a dated file.
-
-    Name
-    ----
-        setup_logger
 
     Parameters
     ----------
-        name: Name of the logger and prefix for the log file.
-        log_folder: Directory where log files are stored.
+        name (str): Name of the logger and prefix for the log file.
+        log_folder (str): Directory where log files are stored.
 
     Returns
     -------
-        Configured logger instance.
+        logging.Logger: configured logger instance.
 
     """
     base = Path(log_folder)
@@ -27,11 +23,29 @@ def setup_logger(name: str = __name__, log_folder: str = "logs") -> getLogger:
 
     logger = getLogger(name)
 
-    # creating dynamic log file name
+    # creating dynamic log file name for daily basis
     current_date = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d")
     log_file_name = f"{name}-{current_date}.log"
+
+    # creating log file path by joining base log folder and file name.
     log_file_path = base.joinpath(log_file_name)
 
-    # adding log file name to logger configuration
-    logging.basicConfig(filename=log_file_path, level=logging.INFO)
+    # creating handler logger
+    if not logger.handlers:
+        formatter = logging.Formatter(
+            fmt="[%(asctime)s] [%(levelname)s] - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S")
+
+        # setting up file handler and format
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setFormatter(formatter)
+
+        # setting up stream handler for console
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+
+        # attaching handlers to the logger
+        logger.addHandler(file_handler)
+        logger.addHandler(stream_handler)
+
     return logger
