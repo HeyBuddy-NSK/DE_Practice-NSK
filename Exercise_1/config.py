@@ -11,6 +11,7 @@ class Config:
 
     """
 
+    # defining download URIs for Divvy trip data
     DOWNLOAD_URI = (
         "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip",
         "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q1.zip",
@@ -21,5 +22,12 @@ class Config:
         "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2220_Q1.zip",
     )
 
-    EXTRACT_PATH = DOWNLOAD_PATH = Path("downloads")
+    # defining logger name
     LOGGER_NAME = "download_and_extract_files"
+
+    # defining base directory and download/extract paths
+    BASE_DIR = Path(__file__).resolve().parent
+    EXTRACT_PATH = DOWNLOAD_PATH = BASE_DIR.joinpath("downloads")
+
+    # defining timeout for download requests
+    TIMEOUT = 7  # seconds
