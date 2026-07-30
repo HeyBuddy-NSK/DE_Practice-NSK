@@ -9,19 +9,28 @@ def setup_logger(name: str = __name__, log_folder: str = "logs") -> logging.Logg
 
     Parameters
     ----------
-        name (str): Name of the logger and prefix for the log file.
-        log_folder (str): Directory where log files are stored.
+    name : str
+        Name of the logger and prefix for the log file.
+    log_folder : str
+        Directory where log files are stored.
 
     Returns
     -------
-        logging.Logger: configured logger instance.
+    logging.Logger: configured logger instance.
 
     """
-    base = Path(log_folder)
+    # getting current directory and creating log folder if it doesn't exist.
+    current_dir = Path(__file__).resolve().parent
+    base = current_dir.joinpath(log_folder)
+
     if not base.exists():
         base.mkdir(parents=True, exist_ok=True)
 
+    # creating logger object for given name.
     logger = getLogger(name)
+
+    # setting logger level to INFO
+    logger.setLevel(logging.INFO)
 
     # creating dynamic log file name for daily basis
     current_date = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d")
