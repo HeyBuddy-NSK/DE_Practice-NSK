@@ -71,12 +71,13 @@ def is_valid_member(zip_member_list: list) -> list:
     Returns
     -------
     list
-        True if the member is a valid file, False if it is a directory.
+        A list of valid file names from the zip file.
 
     """
     # keeping only valid files.
     valid_member_list = []
 
+    logger.debug("Filtering valid members from zip member list.")
     for name in zip_member_list:
         # dividing zip member in parts
         name_parts = Path(name).parts
@@ -101,7 +102,7 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
     ----------
     url : str
         The URL of the file to download.
-    save_path : Path, optional
+    save_path : Path | None
         The directory path where the downloaded file will be saved.
         Defaults to Path("downloads").
 
@@ -111,18 +112,15 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
         The path to the downloaded file if successful, None otherwise.
 
     """
-    logger.info("Starting download for url: %s", url)
-
     # checking if the give url is valid or not.
     if not check_valid_url(url):
         logger.error("Given url %s is invalid.", url)
         return None
 
     # creating download directories if they don't exist.
-    current_dir = Path(__file__).resolve().parent
-    download_path = current_dir.joinpath(save_path)
+    download_path = Config.BASE_DIR.joinpath(save_path)
     download_path.mkdir(parents=True,exist_ok=True)
-    logger.info("Created directory %s for downloads.", download_path)
+    logger.debug("Created directory %s for downloads.", download_path)
 
     # generating file name from the url and creating file path to save.
     file_name = Path(url).name
@@ -132,13 +130,14 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
     expected_csv_path = download_path.joinpath(file_name.replace(".zip", ".csv"))
 
     if file_path.exists() or expected_csv_path.exists():
-        logger.info("File %s already exists. Skipping download.", file_name)
+        logger.info("Target data for File %s already exists. Skipping download.",
+                    file_name)
         return file_path
 
     try:
         # `stream=True` to stream chunks into memory instead of loading the full payload
-        logger.info("Downloading file!...")
-        with requests.get(url, stream=True, timeout=7) as resp:
+        logger.info("Starting download for url: %s", url)
+        with requests.get(url, stream=True, timeout=Config.TIMEOUT) as resp:
             resp.raise_for_status()
 
             with open(file_path, "wb") as save_file_object:
@@ -182,13 +181,9 @@ def file_unzip(file_path: Path, extract_path: Path = Path("downloads")) -> bool:
     # getting file name
     file_name = file_path.name
 
-    # getting current directory.
-    current_dir = Path(__file__).resolve().parent
-
-    logger.info("Starting extraction for file: %s", file_name)
 
     # getting expected csv path.
-    expected_csv_path = current_dir.joinpath(extract_path,file_name.replace(".zip", ".csv"))
+    expected_csv_path = extract_path.joinpath(file_name.replace(".zip", ".csv"))
 
     # checking if the file is already extracted
     if expected_csv_path.exists():
@@ -206,13 +201,14 @@ def file_unzip(file_path: Path, extract_path: Path = Path("downloads")) -> bool:
         return False
 
     # creating directory for extraction if it doesn't exist
-    extract_path = current_dir.joinpath(extract_path)
+    extract_path = Config.BASE_DIR.joinpath(extract_path)
     extract_path.mkdir(parents=True,exist_ok=True)
-    logger.info("created directory %s for extraction.", extract_path)
+    logger.debug("created directory %s for extraction.", extract_path)
 
     # extracting the zip file
 
     try:
+        logger.info("Starting extraction for file: %s", file_name)
         with zipfile.ZipFile(file_path, mode="r") as zip_file_object:
 
             # getting all file names from the zip file
