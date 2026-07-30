@@ -11,37 +11,77 @@ logger = setup_logger("S3_file_download")
 def check_valid_url(url: str) -> bool:
     """Check whether a given string is a valid HTTP/HTTPS URL.
 
-    Args:
-        url: The URL string to validate.
+    Parameters
+    ----------
+    url : str
+        The URL string to validate.
 
-    Returns:
+    Returns
+    -------
+    bool
         True if the URL appears to be a valid HTTP or HTTPS URL (has a scheme
         of 'http' or 'https' or a non-empty network location), otherwise False.
 
     """
     try:
         parsed_url = urlparse(url)
-    except Exception as e:  # noqa: BLE001
-        logger.info(f"URL {url} is not valid {e}")
+    except Exception:
+        logger.exception("URL %s is not valid", url)
         return False
     else:
         return parsed_url.scheme in ("http", "https") or parsed_url.netloc
 
+
+def delete_file(file_path: str) -> bool:
+    """Delete a file at the specified path.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to delete.
+
+    Returns
+    -------
+    bool
+        True if the file was successfully deleted, False if the file does not exist.
+
+    """
+    try:
+        path = Path(file_path)
+        path.unlink()
+        logger.info("File %s deleted successfully.", path.name)
+
+    except OSError:
+        logger.exception("Error deleting file: %s", file_path)
+
+    else:
+        return True
+
+    return False
+
 def download_file(url: str, save_path: str = "downloads") -> Path | None:
     """Download a single file from the provided URL to a specified destination path.
 
-    Prameters:
-        url: Accepts the string value for url.
-        save_path: Accepts the path to save in string format.
+    Parameters
+    ----------
+    url : str
+        The URL of the file to download.
+    save_path : str, optional
+        The directory path where the downloaded file will be saved.
+        Defaults to "downloads".
 
-    Returns:
-        boolean value true for download success and false for download fail.
+    Returns
+    -------
+    Path | None
+        The path to the downloaded file if successful, None otherwise.
 
     """
+    logger.info("Starting download for url: %s", url)
+
     # checking if the give url is valid or not.
     if not check_valid_url(url):
-        logger.error(f"Given url {url} is invalid.")
-        return False
+        logger.error("Given url %s is invalid.", url)
+        return None
 
     # creating download directories.
     current_dir = Path(__file__).resolve().parent
@@ -64,49 +104,52 @@ def download_file(url: str, save_path: str = "downloads") -> Path | None:
                     if content:
                         save_file_object.write(content)
 
-        logger.info(f"File {file_name} downloaded successfully!.")
-        return file_path
-
-    except requests.exceptions.ConnectionError:
-        logger.critical(
-            "Connection Error: Failed to reach the server (DNS failure or down)."
-        )
-
-    except requests.exceptions.Timeout:
-        logger.critical(
-            "Request Time Out: Server took longer than expected to response."
-        )
-
-    except requests.exceptions.HTTPError as h_err:
-        logger.exception(
-            f"HTTP Error: {h_err.response.status_code} - Link might be broken or not found.."
-        )
-
-    except requests.exceptions.MissingSchema:
-        logger.exception(f"Missing URL schema (e.g. missing 'http://) : {url}")
+        logger.info("File %s downloaded successfully!.", file_name)
 
     except requests.exceptions.RequestException as req_err:
-        logger.critical(f"An unexpected network error occured: {req_err}")
+        logger.critical("An unexpected error occured while downloading: %s", req_err)
 
     except OSError as err:
-        logger.critical(f"Disk/File Error: Could not save file to disk ({err})")
+        logger.critical("Disk/File Error: Could not save file to disk (%s)", err)
+
+    else:
+        return file_path
 
     return None
 
 
 def file_unzip(file_path: str, save_path: str = "data") -> bool:
-    """ """
+    """Unzip a zip file to a specified destination path.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the zip file to extract.
+    save_path : str, optional
+        The directory path where the extracted files will be saved.
+        Defaults to "data".
+
+    Returns
+    -------
+    bool
+        True if the zip file was extracted successfully, False otherwise.
+
+    """
+    logger.info("Starting extraction for file: %s", file_path)
+
     # getting file name
     file_name = Path(file_path).name
+
     # checking if file is zip or not
     if not zipfile.is_zipfile(file_path):
-        logger.error(f"File {file_name} is not a zip file.")
+        logger.error("File %s is not a zip file.",file_name)
         return False
 
     # creating directory for extraction
     current_dir = Path(__file__).resolve().parent
     extract_path = current_dir.joinpath(save_path)
     extract_path.mkdir(parents=True,exist_ok=True)
+    logger.info("created directory %s for extraction.", extract_path)
 
     try:
         with zipfile.ZipFile(file_path, mode="r") as zip_file_object:
@@ -136,27 +179,22 @@ def file_unzip(file_path: str, save_path: str = "data") -> bool:
             for member in valid_member_list:
                 zip_file_object.extract(member, path=extract_path)
 
-            logger.info(f"File {Path(file_name).name} Extracted!.")
+            logger.info("File %s Extracted!.", file_name)
 
         # deleting the downloaded zip after extracting
-        logger.info("Deleting file...")
-        file_path.unlink(missing_ok=True)
-        logger.info("File Deleted..")
-        return True
+        delete_file(file_path)
 
     except zipfile.BadZipFile:
-        logger.exception(f"corrupted file: {file_name} is badly formatted or corrupted")
+        logger.exception("corrupted file: %s is badly formatted or corrupted",
+                         file_name)
 
-    except FileNotFoundError:
-        logger.exception(f"Missing file: Could not locate {file_name}")
+    except OSError:
+        logger.exception("OS/Disk error: during extraction : %s")
 
-    except PermissionError:
-        logger.exception(f"Permission denied: Do not have permission to write to {extract_path}")
+    except Exception:
+        logger.exception("unexpected error occured while unzipping %s", file_name)
 
-    except OSError as os_err:
-        logger.exception(f"OS/Disk error: during extraction : {os_err}")
-
-    except Exception as e:
-        logger.exception(f"unexpected error occured while unzipping {file_name}:{e}")
+    else:
+        return True
 
     return False
