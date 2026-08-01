@@ -7,7 +7,7 @@ import requests
 from config import Config
 
 # setting logger
-logger = logging.getLogger(Config.LOGGER_NAME)
+logger = logging.getLogger(__name__)
 
 def check_valid_url(url: str) -> bool:
     """Check whether a given string is a valid HTTP/HTTPS URL.
@@ -140,7 +140,11 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
         with requests.get(url, stream=True, timeout=Config.TIMEOUT) as resp:
             resp.raise_for_status()
 
-            with open(file_path, "wb") as save_file_object:
+            # with open(file_path, "wb") as save_file_object:
+
+            # using Path.open() to open the file in binary write mode
+            # as it is the best way when already have a Path object.
+            with file_path.open("wb") as save_file_object:
                 # Using iter_content() for keeping ram usage to minimal.
                 for content in resp.iter_content(chunk_size=8192):
                     if content:
