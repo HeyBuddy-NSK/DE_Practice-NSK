@@ -1,9 +1,14 @@
+import logging
+
 from config import Config
 from data_ingestion import download_file, file_unzip
 from utils import setup_logger
 
 # Setting up logger
-logger = setup_logger(Config.LOGGER_NAME, log_folder="logs")
+setup_logger(log_folder="logs")
+
+# getting logger instance for this module
+logger = logging.getLogger(__name__)
 
 def download_and_extract_files() -> None:
     """Download and extract files from the specified URLs in the Config class."""
