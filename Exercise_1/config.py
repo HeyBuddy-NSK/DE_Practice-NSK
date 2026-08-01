@@ -22,9 +22,6 @@ class Config:
         "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2220_Q1.zip",
     )
 
-    # defining logger name
-    LOGGER_NAME = "download_and_extract_files"
-
     # defining base directory and download/extract paths
     BASE_DIR = Path(__file__).resolve().parent
     EXTRACT_PATH = DOWNLOAD_PATH = BASE_DIR.joinpath("downloads")
