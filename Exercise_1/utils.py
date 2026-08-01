@@ -4,13 +4,11 @@ from logging import getLogger
 from pathlib import Path
 
 
-def setup_logger(name: str = __name__, log_folder: str = "logs") -> logging.Logger:
+def setup_logger(log_folder: str = "logs") -> logging.Logger:
     """Configure a logger that writes level messages to a dated file.
 
     Parameters
     ----------
-    name : str
-        Name of the logger and prefix for the log file.
     log_folder : str
         Directory where log files are stored.
 
@@ -27,14 +25,14 @@ def setup_logger(name: str = __name__, log_folder: str = "logs") -> logging.Logg
         base.mkdir(parents=True, exist_ok=True)
 
     # creating logger object for given name.
-    logger = getLogger(name)
+    logger = getLogger()
 
     # setting logger level to INFO
     logger.setLevel(logging.INFO)
 
     # creating dynamic log file name for daily basis
     current_date = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d")
-    log_file_name = f"{name}-{current_date}.log"
+    log_file_name = f"EXERCISE_1-{current_date}.log"
 
     # creating log file path by joining base log folder and file name.
     log_file_path = base.joinpath(log_file_name)
@@ -42,7 +40,7 @@ def setup_logger(name: str = __name__, log_folder: str = "logs") -> logging.Logg
     # creating handler logger
     if not logger.handlers:
         formatter = logging.Formatter(
-            fmt="[%(asctime)s] [%(levelname)s] - %(message)s",
+            fmt="[%(asctime)s] - %(name)s - [%(levelname)s] - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S")
 
         # setting up file handler and format
