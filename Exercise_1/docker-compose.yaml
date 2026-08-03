@@ -1,0 +1,12 @@
+services:
+  test:
+    image: "exercise_1"
+    # volumes:
+    command: python -m pytest
+  
+  run:
+    image: "exercise_1"
+    volumes:
+     - ./data:/usr/local/exercise_1/data
+     - ./logs:/usr/local/exercise_1/logs
+    command: python app.py
