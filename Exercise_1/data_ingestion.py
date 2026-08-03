@@ -183,6 +183,19 @@ def file_unzip(file_path: Path, extract_path: Path = Path("downloads")) -> bool:
 
     """
     # getting file name
+    file_path = Path(file_path)
+
+    # checking if the file path is a valid zip file
+    if ( file_path.is_dir() or
+        not file_path.name.endswith(".zip") or
+        not zipfile.is_zipfile(file_path) ):
+
+        logger.warning(
+            "Invalid file path provided. Path must be a valid .zip file, got: %s",
+            file_path )
+
+        return False
+
     file_name = file_path.name
 
 
@@ -196,15 +209,10 @@ def file_unzip(file_path: Path, extract_path: Path = Path("downloads")) -> bool:
 
     # checking if the file exists before attempting extraction
     if not file_path.exists():
-        logger.error("File %s does not exist. Cannot extract.", file_name)
+        logger.warning("File %s does not exist. Cannot extract.", file_name)
         return False
 
-    # checking if file is zip or not
-    if not zipfile.is_zipfile(file_path):
-        logger.error("File %s is not a zip file.",file_name)
-        return False
-
-    # creating directory for extraction if it doesn't exist
+    # creates directory for extraction if it doesn't exist
     extract_path = Config.BASE_DIR.joinpath(extract_path)
     extract_path.mkdir(parents=True,exist_ok=True)
     logger.debug("created directory %s for extraction.", extract_path)
