@@ -4,7 +4,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
-from config import Config
+
+from Exercise_1.config import Config
 
 # setting logger
 logger = logging.getLogger(__name__)
@@ -26,11 +27,14 @@ def check_valid_url(url: str) -> bool:
     """
     try:
         parsed_url = urlparse(url)
+        result =  parsed_url.scheme in ("http", "https") or parsed_url.netloc
+
     except Exception:
         logger.exception("URL %s is not valid", url)
-        return False
     else:
-        return parsed_url.scheme in ("http", "https") or parsed_url.netloc
+        return bool(result)
+
+    return False
 
 
 def delete_file(file_path: Path | str) -> bool:
@@ -74,6 +78,17 @@ def is_valid_member(zip_member_list: list) -> list:
         A list of valid file names from the zip file.
 
     """
+    # checking if the input is a list and not None
+    if zip_member_list is None or not isinstance(zip_member_list, list):
+        logger.warning("Invalid input: Expected a list of zip members, got: %s",
+                       type(zip_member_list).__name__)
+        return []
+
+    # checking if the list is empty
+    if len(zip_member_list) == 0:
+        logger.warning("Empty zip member list provided.")
+        return []
+
     # keeping only valid files.
     valid_member_list = []
 
