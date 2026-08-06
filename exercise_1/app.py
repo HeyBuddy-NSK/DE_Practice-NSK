@@ -1,3 +1,7 @@
+"""Application entry point for downloading and extracting files.
+
+This script serves as the main entry point for the application, orchestrating
+"""
 import logging
 
 from config import Config
