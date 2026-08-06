@@ -78,10 +78,10 @@ def test_download_file_permission_error(tmp_path: Path) -> None:
     # using a system directory to simulate permission error
     # (e.g., C:/Windows/System32 on Windows)
     save_path = Path("C:/Windows/System32/mock_downloads_test")
-    if os.name == "nt":  # If not Windows, use a common restricted directory
+    if os.name != "nt":  # If not Windows, use a common restricted directory
         save_path = tmp_path / "mock_downloads_test"
         save_path.mkdir(parents=True, exist_ok=True)
-        save_path.chmod(0o400)  # Read-only permission to simulate permission error
+        save_path.chmod(0o500)  # Read-only permission to simulate permission error
 
     # attempting to download the file, expecting a permission error
     downloaded_file_path = download_file(download_uri, save_path)
