@@ -147,12 +147,14 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
     # getting expected csv path.
     expected_csv_path = download_path.joinpath(file_name.replace(".zip", ".csv"))
 
-    if file_path.exists() or expected_csv_path.exists():
-        logger.info("Target data for File %s already exists. Skipping download.",
-                    file_name)
-        return file_path
 
     try:
+        # checking if the file already exists to avoid re-downloading
+        if file_path.is_file() or expected_csv_path.exists():
+            logger.info("Target data for File %s already exists. Skipping download.",
+                        file_name)
+            return file_path
+
         # creating directory for download if it doesn't exist
         download_path.mkdir(parents=True, exist_ok=True)
         logger.debug("Created directory %s for downloads.", download_path)
