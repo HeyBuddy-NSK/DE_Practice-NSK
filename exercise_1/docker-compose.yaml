@@ -1,12 +1,16 @@
 services:
   test:
     image: "exercise_1"
+    environment:
+      - PYTHONPATH=/usr/local/exercise_1
     # volumes:
     command: python -m pytest
   
   run:
     image: "exercise_1"
+    environment:
+      - PYTHONPATH=/usr/local/exercise_1
     volumes:
-     - ./data:/usr/local/exercise_1/data
+     - ./downloads:/usr/local/exercise_1/downloads
      - ./logs:/usr/local/exercise_1/logs
     command: python app.py
