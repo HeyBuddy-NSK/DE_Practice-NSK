@@ -1,11 +1,16 @@
+"""Data ingestion utilities for Exercise 1.
+
+This module provides URL validation, file deletion, archive extraction, file downloading,
+and member validation functions to support the data ingestion workflow.
+"""
+
 import logging
 import zipfile
 from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
-
-from Exercise_1.config import Config
+from config import Config
 
 # setting logger
 logger = logging.getLogger(__name__)
@@ -75,7 +80,7 @@ def is_valid_member(zip_member_list: list) -> list:
     Returns
     -------
     list
-        A list of valid file names from the zip file.
+        A list of valid csv file names from the zip file.
 
     """
     # checking if the input is a list and not None
@@ -132,10 +137,8 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
         logger.error("Given url %s is invalid.", url)
         return None
 
-    # creating download directories if they don't exist.
+    # creating path for download if user gives relative path.
     download_path = Config.BASE_DIR.joinpath(save_path)
-    download_path.mkdir(parents=True,exist_ok=True)
-    logger.debug("Created directory %s for downloads.", download_path)
 
     # generating file name from the url and creating file path to save.
     file_name = Path(url).name
@@ -144,12 +147,16 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
     # getting expected csv path.
     expected_csv_path = download_path.joinpath(file_name.replace(".zip", ".csv"))
 
-    if file_path.exists() or expected_csv_path.exists():
+    if file_path.is_file() or expected_csv_path.exists():
         logger.info("Target data for File %s already exists. Skipping download.",
                     file_name)
         return file_path
 
     try:
+        # creating directory for download if it doesn't exist
+        download_path.mkdir(parents=True, exist_ok=True)
+        logger.debug("Created directory %s for downloads.", download_path)
+
         # `stream=True` to stream chunks into memory instead of loading the full payload
         logger.info("Starting download for url: %s", url)
         with requests.get(url, stream=True, timeout=Config.TIMEOUT) as resp:
