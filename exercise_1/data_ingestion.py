@@ -147,7 +147,7 @@ def download_file(url: str, save_path: Path = Path("downloads")) -> Path | None:
     # getting expected csv path.
     expected_csv_path = download_path.joinpath(file_name.replace(".zip", ".csv"))
 
-    if file_path.is_file() or expected_csv_path.exists():
+    if file_path.exists() or expected_csv_path.exists():
         logger.info("Target data for File %s already exists. Skipping download.",
                     file_name)
         return file_path
