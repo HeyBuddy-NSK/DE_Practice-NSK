@@ -3,7 +3,8 @@ services:
     image: "exercise_1"
     environment:
       - PYTHONPATH=/usr/local/exercise_1
-    # volumes:
+    volumes:
+      - .:/usr/local/exercise_1
     command: python -m pytest
   
   run:
@@ -11,6 +12,7 @@ services:
     environment:
       - PYTHONPATH=/usr/local/exercise_1
     volumes:
-     - ./downloads:/usr/local/exercise_1/downloads
-     - ./logs:/usr/local/exercise_1/logs
+    #  - ./downloads:/usr/local/exercise_1/downloads
+    #  - ./logs:/usr/local/exercise_1/logs
+       - .:/usr/local/exercise_1
     command: python app.py
