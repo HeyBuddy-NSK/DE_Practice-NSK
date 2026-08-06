@@ -1,3 +1,5 @@
+"""Configuration constants for download URIs and local paths."""
+
 from pathlib import Path
 
 
