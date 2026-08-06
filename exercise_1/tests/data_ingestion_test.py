@@ -1,11 +1,15 @@
-import stat
+"""Unit tests for data ingestion module.
+
+This module contains test cases for the data_ingestion module, including
+tests for URL validation, file downloading, file extraction, and member validation.
+"""
+import os
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
 
 import pytest
-
-from Exercise_1.data_ingestion import (
+from data_ingestion import (
     check_valid_url,
     download_file,
     file_unzip,
@@ -16,27 +20,43 @@ from Exercise_1.data_ingestion import (
 def test_check_valid_url() -> None:
     """Verify that a known valid URL is recognized as valid."""
     test_uri = "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip"
+
+    # asserting that the URL is valid
     assert check_valid_url(test_uri) is True  # noqa: S101
 
 
 def test_check_invalid_url() -> None:
     """Verify that a known invalid URL is recognized as invalid."""
     test_uri = "Divvy_Trips_2018_Q4.zip"
+
+    # asserting that the URL is invalid
     assert check_valid_url(test_uri) is False  # noqa: S101
 
 def test_download_file(tmp_path: Path) -> None:
     """Placeholder for download_file tests."""
     download_uri = "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip"
+
+    # creating a temporary directory for downloads
     save_path = tmp_path / "downloads"
+
+    # downloading the file and checking if it exists
     downloaded_file_path = download_file(download_uri, save_path)
+
+    # asserting that the downloaded file path is not None and exists
     assert downloaded_file_path is not None  # noqa: S101
     assert downloaded_file_path.exists()  # noqa: S101
 
 def test_download_file_invalid_url(tmp_path: Path) -> None:
     """Test download_file with an invalid URL."""
     invalid_uri = "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip_invalid"
+
+    # creating a temporary directory for downloads
     save_path = tmp_path / "downloads"
+
+    # attempting to download the file with an invalid URL
     downloaded_file_path = download_file(invalid_uri, save_path)
+
+    # asserting that the downloaded file path is None due to invalid URL
     assert downloaded_file_path is None  # noqa: S101
 
 def test_download_file_existing_file(tmp_path: Path) -> None:
@@ -53,48 +73,66 @@ def test_download_file_existing_file(tmp_path: Path) -> None:
 
 def test_download_file_permission_error(tmp_path: Path) -> None:
     """Test download_file with a permission error."""
-    download_uri = "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip"
-    save_path = tmp_path / "downloads"
-    save_path.mkdir(parents=True, exist_ok=True)
+    download_uri = "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2020_Q1.zip"
 
-    # Remove write permissions from the directory
-    save_path.chmod(stat.S_IREAD)
+    # using a system directory to simulate permission error
+    # (e.g., C:/Windows/System32 on Windows)
+    save_path = Path("C:/Windows/System32/mock_downloads_test")
+    if os.name == "nt":  # If not Windows, use a common restricted directory
+        save_path = tmp_path / "mock_downloads_test"
+        save_path.mkdir(parents=True, exist_ok=True)
+        save_path.chmod(0o400)  # Read-only permission to simulate permission error
 
+    # attempting to download the file, expecting a permission error
     downloaded_file_path = download_file(download_uri, save_path)
+
+    # asserting that the downloaded file path is None due to permission error
     assert downloaded_file_path is None  # noqa: S101
 
-    # Restore permissions for cleanup
-    save_path.chmod(stat.S_IWRITE | stat.S_IREAD)
+    if os.name != "nt":
+        save_path.chmod(0o700)  # Restore permissions for cleanup
 
 def test_file_unzip(tmp_path: Path) -> None:
-    """Placeholder for file_unzip tests."""
+    """Test file_unzip with a valid zip file."""
+    # creating a temporary directory for downloads and extraction
     file_path = tmp_path / "downloads" / "Divvy_Trips_2018_Q4.zip"
     extract_path = tmp_path / "downloads" / "extracted"
 
     # creating a dummy zip file for testing
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # creating a zip file with a dummy CSV file inside
     with ZipFile(file_path, "w") as zip_file:
         zip_file.writestr("data.csv", "id,name\n1,NSK\n")
 
     # Assuming the file exists and is a valid zip file
     result = file_unzip(file_path, extract_path)
+
+    # asserting that the extraction was successful
     assert result is True  # noqa: S101
 
 def test_file_unzip_invalid_file(tmp_path: Path) -> None:
     """Test file_unzip with an invalid file path."""
+    # creating a temporary directory for downloads and extraction
     invalid_file_path = tmp_path / "downloads"
     extract_path = tmp_path / "downloads" / "extracted"
+
+    # attempting to unzip a non-existent file
     result = file_unzip(invalid_file_path, extract_path)
+
+    # asserting that the extraction failed due to invalid file path
     assert result is False  # noqa: S101
 
 def test_is_valid_member() -> None:
-    """Placeholder for is_valid_member tests."""
+    """Test is_valid_member with valid member names."""
     members = ["data.csv", "info.txt", ".hidden.csv", "folder/data.csv"]
+
+    # filtering valid members from the list
     valid_members = is_valid_member(members)
 
     expected_valid_members = 2  # Only "data.csv" and "folder/data.csv" are valid
 
+    # asserting that the number of valid members matches the expected count
     assert len(valid_members) == expected_valid_members  # noqa: S101
 
 @pytest.mark.parametrize("edge_cases", [
@@ -108,5 +146,5 @@ def test_is_valid_member_edge_case(edge_cases: Any) -> None:  # noqa: ANN401
     # checking the edge cases for member validation
     result = is_valid_member(edge_cases)
 
-    #asserting that the result is an empty list for invalid cases
+    # asserting that the result is an empty list for invalid cases
     assert result == []  # noqa: S101
