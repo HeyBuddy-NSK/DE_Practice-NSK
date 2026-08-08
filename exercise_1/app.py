@@ -2,11 +2,15 @@
 
 This script serves as the main entry point for the application, orchestrating
 """
+import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
-from config import Config
-from data_ingestion import download_file, file_unzip
-from utils import setup_logger
+from src.async_data_ingestion import download_all_async
+from src.config import Config
+from src.data_ingestion import download_file
+from src.ingestion_helper import file_unzip
+from src.utils import setup_logger
 
 # Setting up logger
 setup_logger(log_folder="logs")
@@ -31,7 +35,7 @@ def download_and_extract_files() -> None:
 
     logger.info("Download and extraction process completed.")
 
-def download_single_file() -> None:
+def download_and_extract_single_file() -> None:
     """Download and extract the first file from Config.DOWNLOAD_URI.
 
     This convenience function downloads the first URL listed in
@@ -48,5 +52,29 @@ def download_single_file() -> None:
         file_unzip(download_file_path, Config.EXTRACT_PATH)
     logger.info("Single file download and extraction process completed.")
 
+def download_and_extract_async() -> None:
+    """Download and extract files asynchronously."""
+    # getting constants from config
+    urls = Config.DOWNLOAD_URI
+    sem = Config.SEMAPHORE
+    save_path = Config.DOWNLOAD_PATH
+    extract_path = Config.EXTRACT_PATH
+
+    # downloading files
+    downloaded_file_paths = asyncio.run(download_all_async(urls,save_path,sem))
+
+    # starting extraction
+    if downloaded_file_paths:
+        logger.info("Starting file extraction..")
+
+        with ThreadPoolExecutor(max_workers = Config.MAX_WORKERS) as executor:
+            for path in downloaded_file_paths:
+                executor.submit(file_unzip, path, extract_path)
+
+        logger.info("All files extracted successfully.")
+    else:
+        logger.warning("No files to extract.")
+
+
 if __name__=="__main__":
-    download_and_extract_files()
+    download_and_extract_async()
