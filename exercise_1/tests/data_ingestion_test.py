@@ -9,7 +9,8 @@ from typing import Any
 from zipfile import ZipFile
 
 import pytest
-from data_ingestion import (
+
+from exercise_1.src.data_ingestion import (
     check_valid_url,
     download_file,
     file_unzip,
