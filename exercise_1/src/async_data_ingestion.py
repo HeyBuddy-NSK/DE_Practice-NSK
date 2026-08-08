@@ -1,3 +1,11 @@
+"""async_data_ingestion.
+
+Asynchronous utilities to download files from URLs using aiohttp.
+
+This module provides functions to download a single file or multiple files
+concurrently with controlled concurrency limits.
+"""
+
 import asyncio
 import logging
 from pathlib import Path
@@ -78,7 +86,8 @@ async def download_file_async(
             logger.info("File %s downloaded successfully!.", file_name)
 
         except aiohttp.ClientError:
-            logger.exception("An unexpected error occurred while downloading from %s", url)
+            logger.exception(
+                "An unexpected error occurred while downloading from %s", url)
         except asyncio.TimeoutError:
             logger.exception("Request timed out while downloading from %s", url)
         except OSError:
