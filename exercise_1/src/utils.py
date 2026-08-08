@@ -1,7 +1,11 @@
+"""Utilities for logging configuration.
+
+This module provides helper functions to configure application logging.
+"""
+
 import datetime
 import logging
 from logging import getLogger
-from pathlib import Path
 
 from src.config import Config
 
