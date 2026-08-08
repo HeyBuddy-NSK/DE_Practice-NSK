@@ -1,3 +1,5 @@
+"""Utility helpers for ingestion related file operations."""
+
 import logging
 import zipfile
 from pathlib import Path
@@ -153,8 +155,6 @@ def file_unzip(file_path: Path, extract_path: Path = Path("downloads")) -> bool:
             file_path )
 
         return False
-
-    
 
     # creates directory for extraction if it doesn't exist
     extract_path = Config.BASE_DIR.joinpath(extract_path)
