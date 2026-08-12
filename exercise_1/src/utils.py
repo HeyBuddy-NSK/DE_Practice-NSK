@@ -5,6 +5,7 @@ This module provides helper functions to configure application logging.
 
 import datetime
 import logging
+import time
 from logging import getLogger
 
 from src.config import Config
@@ -47,6 +48,8 @@ def setup_logger(log_folder: str = "logs") -> logging.Logger:
         formatter = logging.Formatter(
             fmt="[%(asctime)s] - %(name)s - [%(levelname)s] - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S")
+
+        formatter.converter = time.gmtime
 
         # setting up file handler and format
         file_handler = logging.FileHandler(log_file_path)
