@@ -10,7 +10,7 @@ from zipfile import ZipFile
 
 import pytest
 
-from exercise_1.src.data_ingestion import (
+from src.data_ingestion import (
     check_valid_url,
     download_file,
     file_unzip,
@@ -149,3 +149,6 @@ def test_is_valid_member_edge_case(edge_cases: Any) -> None:  # noqa: ANN401
 
     # asserting that the result is an empty list for invalid cases
     assert result == []  # noqa: S101
+
+def test_download_all_async():
+    pass
