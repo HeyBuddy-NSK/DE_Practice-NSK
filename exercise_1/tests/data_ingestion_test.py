@@ -1,7 +1,9 @@
-"""Unit tests for data ingestion module.
+"""Data ingestion tests.
 
-This module contains test cases for the data_ingestion module, including
-tests for URL validation, file downloading, file extraction, and member validation.
+This module contains test cases for the data_ingestion
+and async_data_ingestion module,  including tests for URL validation,
+file downloading, file extraction, and member validation.
+Tests exercise real network calls against the source URLs.
 """
 import os
 from pathlib import Path
@@ -9,9 +11,9 @@ from typing import Any
 from zipfile import ZipFile
 
 import pytest
-
-from src.data_ingestion import (
+from src import (
     check_valid_url,
+    download_all_async,
     download_file,
     file_unzip,
     is_valid_member,
@@ -135,6 +137,7 @@ def test_is_valid_member() -> None:
 
     # asserting that the number of valid members matches the expected count
     assert len(valid_members) == expected_valid_members  # noqa: S101
+    assert valid_members == ["data.csv","folder/data.csv"]
 
 @pytest.mark.parametrize("edge_cases", [
     None,           # Testing None
@@ -150,5 +153,25 @@ def test_is_valid_member_edge_case(edge_cases: Any) -> None:  # noqa: ANN401
     # asserting that the result is an empty list for invalid cases
     assert result == []  # noqa: S101
 
-def test_download_all_async():
-    pass
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("urls",[
+        (
+            "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip",
+            "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q1.zip",
+            "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q2.zip",
+            "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q3.zip",
+        ),
+        (), # empty tuple
+    ],
+)
+async def test_download_all_async(urls: tuple, tmp_path: Path) -> None:
+    """Verify that concurrent downloads save all requested files."""
+    save_path = tmp_path / "downloads"
+    download_paths = await download_all_async(urls, save_path,2)
+    assert len(download_paths) == len(urls)
+
+    if len(download_paths) > 0:
+        for path in download_paths:
+            assert path is not None
+            assert path.exists()
