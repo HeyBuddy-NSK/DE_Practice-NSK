@@ -6,11 +6,7 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-from src.async_data_ingestion import download_all_async
-from src.config import Config
-from src.data_ingestion import download_file
-from src.ingestion_helper import file_unzip
-from src.utils import setup_logger
+from src import Config, download_all_async, download_file, file_unzip, setup_logger
 
 # Setting up logger
 setup_logger(log_folder="logs")
