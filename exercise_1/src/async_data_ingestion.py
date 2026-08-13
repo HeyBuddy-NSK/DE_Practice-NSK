@@ -111,7 +111,7 @@ async def download_all_async(
         Tuple of URL strings to download.
     save_path : pathlib.Path
         Directory path where downloaded files will be saved.
-    sem : asyncio.Semaphore
+    sem : int
         Concurrency limit (either an asyncio.Semaphore or an integer
         used to construct one).
 
@@ -122,6 +122,10 @@ async def download_all_async(
         list of downloaded file paths once all are complete.
 
     """
+    if len(urls)<=0:
+        logger.warning("There is no url to start download.")
+        return []
+
     # created semaphore object for controled concurrency
     sem = asyncio.Semaphore(sem)
 
